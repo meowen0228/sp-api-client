@@ -1,0 +1,24 @@
+# 忽略編譯前的 TypeScript 檔案
+src/*.ts
+src/**/*.ts
+
+# 忽略測試檔案
+tests
+__tests__
+
+# 忽略 IDE 設定檔
+.vscode
+.idea
+
+# 忽略暫存檔案
+*.swp
+
+# 忽略編譯輸出目錄
+dist
+
+# 忽略 npm 相關的檔案
+.npmrc
+package-lock.json
+
+# 忽略 git 相關的檔案
+.git

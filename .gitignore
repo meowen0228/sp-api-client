@@ -1,0 +1,16 @@
+# 忽略編譯後的檔案
+/dist
+/build
+
+# 忽略 IDE 設定檔
+.vscode
+.idea
+
+# 忽略暫存檔案
+*.swp
+
+# 忽略 node 模組
+node_modules
+
+# 忽略 log 檔案
+logs/*.log
