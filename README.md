@@ -1,80 +1,182 @@
-# sp-api-client 功能指南
+# SharePoint Node.js Library
 
-sp-api-client 讓您可以輕鬆操作檔案及資料夾。以下提供功能概述與操作範例，方便使用者理解如何使用此模組。
+A Node.js library for interacting with SharePoint, supporting CRUD operations, file uploads/downloads, and folder management using WebSocket. The library supports both synchronous and asynchronous operations using promises and async/await.
 
-## 功能清單
+## Features
 
-### 1. 列出資料夾內容
+- Authenticate with SharePoint using various authentication methods.
+- List the contents of a folder (Folders and Files).
+- Download files as buffers or to local paths.
+- Upload files with support for large file uploads using chunking.
+- Create and delete folders.
+- Delete files.
 
-顯示資料夾中的所有檔案與子資料夾。
+## Installation
 
-#### 範例
+To install the library, use npm or yarn:
+
+```sh
+npm install sp-api-client
+```
+or
+```sh
+yarn add sp-api-client
+```
+
+## Usage
+
+### Importing the Library
 
 ```typescript
-import { SharePoint } from "./dist/sharepoint";
+import { SharePoint, SharePointOptions } from "sp-api-client";
+```
 
-const sharePoint = await SharePoint.create({
-  baseUrl: "baseUrl";
-  siteUrl: "siteUrl";
+### Initialization
+
+To initialize the SharePoint client, provide the necessary options including base URL, site URL, and authentication information.
+
+```typescript
+const options: SharePointOptions = {
+  baseUrl: "https://your-sharepoint-site.com",
+  siteUrl: "/sites/yoursite",
   loginInfo: {
-    userusername: "userusername";
-    password: "password";
-  };
-})
-const contents = await sharePoint.listFolderContents("/test-folder");
-console.log(contents);
-// result：
-// {
-//   folders: ["folder1", "folder2"],
-//   files: ["file1.txt", "file2.txt"]
-// }
+    username: 'your-username',
+    password: 'your-password'
+  }
+};
+
+async function main() {
+  const sharePoint = await SharePoint.create(options);
+  // Your further operations
+}
+
+main().catch(console.error);
 ```
 
-### 2. 下載檔案
-
-從 SharePoint 下載檔案到本地端。
+### Listing Folder Contents
 
 ```typescript
-await sharePoint.downloadFileToLocal(
-  "/test-folder/test.txt",
-  "./local-test.txt"
-);
-console.log("檔案下載完成！");
+async function listFolderContents() {
+  const folderContents = await sharePoint.listFolderContents("/path/to/folder");
+  console.log('Folders:', folderContents.folders);
+  console.log('Files:', folderContents.files);
+}
+
+listFolderContents().catch(console.error);
 ```
 
-### 3. 上傳檔案
+### Downloading Files
 
-將本地端檔案上傳到 SharePoint 指定資料夾。
+#### As a Buffer
 
 ```typescript
-const buffer = Buffer.from("檔案內容");
-await sharePoint.uploadFile("/test-folder", "new-file.txt", buffer);
-console.log("檔案上傳成功！");
+async function downloadFile() {
+  const buffer = await sharePoint.downloadFileAsBuffer("/path/to/file.txt");
+  console.log("File Buffer:", buffer);
+}
+
+downloadFile().catch(console.error);
 ```
 
-### 4. 建立資料夾
-
-在 SharePoint 上建立新資料夾。
+#### To a Local Path
 
 ```typescript
-await sharePoint.createFolder("/parent-folder", "new-folder");
-console.log("資料夾建立完成！");
+async function downloadFileToLocal() {
+  await sharePoint.downloadFileToLocal("/path/to/file.txt", "./local-file.txt");
+  console.log("File downloaded to local path.");
+}
+
+downloadFileToLocal().catch(console.error);
 ```
 
-### 5. 刪除檔案
+### Uploading Files
 
-刪除 SharePoint 中的指定檔案。
+#### From a Buffer
 
 ```typescript
-await sharePoint.deleteFile("/test-folder", "old-file.txt");
-console.log("檔案已刪除！");
+import * as fs from "fs";
+
+async function uploadFile() {
+  const buffer = fs.readFileSync("./local-file.txt");
+  await sharePoint.uploadFile("/path/to/folder", "uploaded-file.txt", buffer);
+  console.log("File uploaded to SharePoint.");
+}
+
+uploadFile().catch(console.error);
 ```
 
-## 注意事項
+#### Large File Upload (Chunked)
 
-- 請確認您使用的 SharePoint 帳戶擁有操作權限。
-- 測試時確保 `options` 中的站點 URL 和登入資訊正確無誤。
+```typescript
+async function uploadLargeFile() {
+  const buffer = fs.readFileSync("./large-file.txt");
+  await sharePoint.uploadFileFromLargeBuffer("/path/to/folder", "large-uploaded-file.txt", buffer);
+  console.log("Large file uploaded to SharePoint.");
+}
 
-## 結語
+uploadLargeFile().catch(console.error);
+```
 
-本模組提供基本的檔案與資料夾操作功能，適用於開發和測試環境。如果您有任何建議或發現問題，歡迎提交回饋或貢獻代碼！
+### Creating a Folder
+
+```typescript
+async function createFolder() {
+  await sharePoint.createFolder("/path/to/parent-folder", "new-folder");
+  console.log("Folder created.");
+}
+
+createFolder().catch(console.error);
+```
+
+### Deleting a File
+
+```typescript
+async function deleteFile() {
+  await sharePoint.deleteFile("/path/to/folder", "file-to-delete.txt");
+  console.log("File deleted.");
+}
+
+deleteFile().catch(console.error);
+```
+
+## API
+
+### SharePoint
+
+#### Methods
+
+- `static create(options: SharePointOptions): Promise<SharePoint>`
+  - Initialize the SharePoint client.
+
+- `listFolderContents(folderPath: string): Promise<{ folders: any[], files: any[] }>`
+  - Lists the contents of a specified folder.
+
+- `downloadFileAsBuffer(filePath: string): Promise<Buffer>`
+  - Downloads a file as a buffer.
+
+- `downloadFileToLocal(filePath: string, localPath: string): Promise<void>`
+  - Downloads a file to a local path.
+
+- `uploadFile(folderPath: string, fileName: string, buffer: Buffer): Promise<void>`
+  - Uploads a file from a buffer.
+
+- `uploadFileFromLargeBuffer(folderPath: string, fileName: string, buffer: Buffer): Promise<void>`
+  - Uploads a large file from a buffer using chunking.
+
+- `createFolder(parentPath: string, folderName: string): Promise<void>`
+  - Creates a folder.
+
+- `deleteFile(folderPath: string, fileName: string): Promise<void>`
+  - Deletes a file.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request or open an Issue if you have any suggestions or find any bugs.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For any questions or concerns, please reach out to [meowen0228@gmail.com](mailto:meowen0228@gmail.com).
